@@ -1,0 +1,60 @@
+version: '3.8'
+services:
+
+  mysql:
+    image: mysql:8.0
+    container_name: mysql
+    restart: always
+    networks:
+      vpcbr:
+       ipv4_address: 172.16.0.3
+    environment:
+      - MYSQL_ROOT_PASSWORD=6yhn&UJM@WSX
+    volumes:
+      - /home/data/mysql/data:/var/lib/mysql/
+      - /home/data/mysql/conf.d/:/etc/mysql/conf.d/
+      - /home/data/mysql/backup/:/backup/
+
+  jira:
+    build: ./jira
+    container_name: jira
+    environment:
+      - TZ='europe/minsk'
+    restart: always
+    networks:
+      vpcbr:
+       ipv4_address: 172.16.0.4
+    ports:
+      - '8080:8080'
+    volumes:
+        - /home/data/jira/var/:/var/atlassian/jira/
+        - /home/data/jira/logs/:/opt/atlassian/jira/logs/
+    depends_on:
+      - mysql
+
+  confluence:
+    build: ./confluence
+    container_name: confluence
+    environment:
+      - TZ='europe/minsk'
+    restart: always
+    networks:
+      vpcbr:
+       ipv4_address: 172.16.0.5
+    ports:
+      - '8090:8090'
+      - '8091:8091'
+    volumes:
+      - /home/data/confluence/var/:/var/atlassian/confluence/
+      - /home/data/confluence/logs/:/opt/atlassian/confluence/logs/
+    depends_on:
+      - mysql
+
+
+networks:
+  vpcbr:
+    driver: bridge
+    ipam:
+     config:
+       - subnet: 172.16.0.0/16
+         gateway: 172.16.0.1
